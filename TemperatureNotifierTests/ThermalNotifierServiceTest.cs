@@ -1,5 +1,6 @@
 ﻿using FakeItEasy;
 using Microsoft.Extensions.Logging;
+using SlackNotifierWS.Service;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TemperatureNotifierTests.Framework;
 using ThermalNotifierWS.Service;
+using ThermometerWS.Service;
 using Xunit;
 
 namespace TemperatureNotifierTests
@@ -16,6 +18,8 @@ namespace TemperatureNotifierTests
     public class ThermalNotifierServiceTest
     {
         private readonly ILogger _logger;
+        private readonly IThermometerService _thermometerService;
+        private readonly ISlackNotifierService _slackNotifierService;
         private readonly ThermalNotifierService _thermalNotifierService;
         private readonly MockHttpMessageHandler _mockHttpMessageHandler;
 
@@ -25,7 +29,9 @@ namespace TemperatureNotifierTests
             var httpClient = new HttpClient(_mockHttpMessageHandler);
 
             _logger = A.Fake<ILogger>();
-            _thermalNotifierService = new ThermalNotifierService(httpClient, _logger);
+            _thermometerService = A.Fake<IThermometerService>();
+            _slackNotifierService = A.Fake<ISlackNotifierService>();
+            _thermalNotifierService = new ThermalNotifierService(_thermometerService, _slackNotifierService, _logger);
             ThermalNotifierServiceTemperatureHistory.LastKnownTemperature = null;
         }
 
