@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using SlackNotifierWS.Service;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,20 +8,23 @@ using System.Net.Http;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using ThermalNotifierWS.Service.NotifyTemperatureConditionProviders;
+using ThermometerWS.Service;
 
 namespace ThermalNotifierWS.Service
 {
     public class ThermalNotifierService : IThermalNotifierService
     {
-        private readonly HttpClient _httpClient;
         private readonly ILogger _logger;
+        private readonly IThermometerService _thermometerService;
+        private readonly ISlackNotifierService _slackNotifierService;
+        private const double MinTemperature = 25;
+        private const double MaxTemperature = 28;
 
-        private const double MinTemperature = 22;
-        private const double MaxTemperature = 27;
-
-        public ThermalNotifierService(HttpClient httpClient, ILogger logger)
+        public ThermalNotifierService(IThermometerService thermometerService, ISlackNotifierService slackNotifierService, ILogger logger)
         {
-            _httpClient = httpClient;
+            _thermometerService = thermometerService;
+            _slackNotifierService = slackNotifierService;
+
             _logger = logger;
         }
 
@@ -40,42 +44,30 @@ namespace ThermalNotifierWS.Service
 
         private async Task<bool> NotifyTemperatureIfNeeded(INotifyTemperatureProvider[] notifyTemperatureProviders)
         {
-            string requestTemperatureUrl = "https://localhost:7001/Thermometer";
-            HttpResponseMessage responseTemperature = await _httpClient.GetAsync(requestTemperatureUrl);
-            if (responseTemperature == null || responseTemperature.StatusCode != HttpStatusCode.OK)
+            double? temperature = await _thermometerService.GetTempratureAsync();
+            if (!temperature.HasValue)
             {
-                _logger.LogError($"{requestTemperatureUrl} failed with status {responseTemperature?.StatusCode}");
-                return false;
-            }
-            string temperatureText = await responseTemperature.Content.ReadAsStringAsync();
-
-            if (!double.TryParse(temperatureText, out double temperature))
-            {
-                _logger.LogError($"{requestTemperatureUrl} failed with non-double temperature {temperatureText}");
+                _logger.LogError($"thermometerService failed");
                 return false;
             }
 
             double? previouslyKnownTemperature = ThermalNotifierServiceTemperatureHistory.LastKnownTemperature;
             ThermalNotifierServiceTemperatureHistory.LastKnownTemperature = temperature;
 
-            INotifyTemperatureProvider notifyTemperatureProvider = FindNotificationProvider(notifyTemperatureProviders, temperature, previouslyKnownTemperature);
+            INotifyTemperatureProvider notifyTemperatureProvider = FindNotificationProvider(notifyTemperatureProviders, temperature.Value, previouslyKnownTemperature);
 
             if (notifyTemperatureProvider == null)
             {
-                _logger.LogDebug($"{requestTemperatureUrl} succeeded, but temperature is OK: {temperature}℃");
+                _logger.LogDebug($"requestTemperature succeeded, but temperature is OK: {temperature}℃");
                 return true;
             }
+            string SlackEndpoint = "https://hooks.slack.com/services/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";
+            var notificationRequestUrlBuilder = new UriBuilder(SlackEndpoint);
 
-            string requestNotificationUrl = "https://localhost:6001/SlackNotifier";
-            var notificationRequestUrlBuilder = new UriBuilder(requestNotificationUrl);
-            string encodedMessage = UrlEncoder.Default.Encode(notifyTemperatureProvider.GenerateMessage(temperature));
-            notificationRequestUrlBuilder.Query = $"message={encodedMessage}";
-            HttpResponseMessage responseNotification = await _httpClient.GetAsync(notificationRequestUrlBuilder.ToString());
-            if (responseNotification == null || responseNotification.StatusCode != HttpStatusCode.OK)
-            {
-                _logger.LogError($"{requestNotificationUrl} failed with status {responseNotification?.StatusCode}");
-                return false;
-            }
+            string encodedMessage = UrlEncoder.Default.Encode(notifyTemperatureProvider.GenerateMessage(temperature.Value));
+            notificationRequestUrlBuilder.Query = $"payload={encodedMessage}";
+            await _slackNotifierService.NotifyAsync(SlackEndpoint, encodedMessage);
+
             return true;
         }
 

@@ -5,5 +5,10 @@
     <Configurations>Debug;Release;wwwroot</Configurations>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SlackNotifierWS\SlackNotifierWS.csproj" />
+    <ProjectReference Include="..\ThermometerWS\ThermometerWS.csproj" />
+  </ItemGroup>
+
 
 </Project>
