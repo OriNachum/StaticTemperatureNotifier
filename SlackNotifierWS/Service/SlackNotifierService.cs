@@ -18,7 +18,7 @@ namespace SlackNotifierWS.Service
             _httpClient = httpClient;
         }
 
-        public async Task NotifyAsync(string url, string message)
+        public async Task<bool> NotifyAsync(string url, string message)
         {
             using (var request = new HttpRequestMessage(new HttpMethod("POST"), url))
             {
@@ -26,6 +26,8 @@ namespace SlackNotifierWS.Service
                 request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded");
 
                 var response = await _httpClient.SendAsync(request);
+
+                return response.IsSuccessStatusCode;
             }
         }
     }

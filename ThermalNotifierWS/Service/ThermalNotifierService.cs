@@ -19,6 +19,7 @@ namespace ThermalNotifierWS.Service
         private readonly ISlackNotifierService _slackNotifierService;
         private const double MinTemperature = 25;
         private const double MaxTemperature = 28;
+        private const double BufferTemperature = 0.1;
 
         public ThermalNotifierService(IThermometerService thermometerService, ISlackNotifierService slackNotifierService, ILogger logger)
         {
@@ -32,8 +33,8 @@ namespace ThermalNotifierWS.Service
         {
             return await NotifyTemperatureIfNeeded(new INotifyTemperatureProvider[]
             {
-                new NotifyOnBreachingAllowedRange(MinTemperature, MaxTemperature),
-                new NotifyOnRevertingToAllowedRange(MinTemperature, MaxTemperature)
+                new NotifyOnBreachingAllowedRange(MinTemperature - BufferTemperature, MaxTemperature + BufferTemperature),
+                new NotifyOnRevertingToAllowedRange(MinTemperature - BufferTemperature, MaxTemperature + BufferTemperature)
             });
         }
 
@@ -66,7 +67,12 @@ namespace ThermalNotifierWS.Service
 
             string encodedMessage = UrlEncoder.Default.Encode(notifyTemperatureProvider.GenerateMessage(temperature.Value));
             notificationRequestUrlBuilder.Query = $"payload={encodedMessage}";
-            await _slackNotifierService.NotifyAsync(SlackEndpoint, encodedMessage);
+            bool success = await _slackNotifierService.NotifyAsync(SlackEndpoint, encodedMessage);
+
+            if (!success)
+            {
+                ThermalNotifierServiceTemperatureHistory.LastKnownTemperature = previouslyKnownTemperature;
+            }
 
             return true;
         }
