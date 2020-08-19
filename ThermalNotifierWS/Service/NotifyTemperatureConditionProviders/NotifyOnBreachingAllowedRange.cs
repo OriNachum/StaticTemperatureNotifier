@@ -9,8 +9,6 @@ namespace ThermalNotifierWS.Service.NotifyTemperatureConditionProviders
     {
         private readonly double _minTemperature;
         private readonly double _maxTemperature;
-        private DateTime? LastReminderTime;
-
 
         public NotifyOnBreachingAllowedRange(double minTemperature, double maxTemperature)
         {
@@ -25,7 +23,7 @@ namespace ThermalNotifierWS.Service.NotifyTemperatureConditionProviders
 
             if (shouldNotify)
             {
-                LastReminderTime = DateTime.UtcNow;
+                NotifyOnBreachingAllowedRangeReminderHistory.LastReminderTime = DateTime.UtcNow;
             }
 
             return shouldNotify;
@@ -38,7 +36,8 @@ namespace ThermalNotifierWS.Service.NotifyTemperatureConditionProviders
 
         private bool ShouldRemind()
         {
-            return !LastReminderTime.HasValue || (DateTime.UtcNow - LastReminderTime.Value) > TimeSpan.FromHours(1);
+            DateTime? lastReminderTime = NotifyOnBreachingAllowedRangeReminderHistory.LastReminderTime;
+            return !lastReminderTime.HasValue || (DateTime.UtcNow - lastReminderTime.Value) > TimeSpan.FromHours(1);
         }
         public string GenerateMessage(double temperature) => $"Temperature out of allowed range: {temperature}℃";
     }
