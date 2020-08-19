@@ -69,11 +69,6 @@ namespace ThermalNotifierWS.Service
             notificationRequestUrlBuilder.Query = $"payload={encodedMessage}";
             bool success = await _slackNotifierService.NotifyAsync(SlackEndpoint, encodedMessage);
 
-            if (!success)
-            {
-                ThermalNotifierServiceTemperatureHistory.LastKnownTemperature = previouslyKnownTemperature;
-            }
-
             return true;
         }
 
