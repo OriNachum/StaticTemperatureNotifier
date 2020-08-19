@@ -34,7 +34,7 @@ namespace ThermalNotifierWS.Service
             return await NotifyTemperatureIfNeeded(new INotifyTemperatureProvider[]
             {
                 new NotifyOnBreachingAllowedRange(MinTemperature - BufferTemperature, MaxTemperature + BufferTemperature),
-                new NotifyOnRevertingToAllowedRange(MinTemperature - BufferTemperature, MaxTemperature + BufferTemperature)
+                new NotifyOnRevertingToAllowedRange(MinTemperature + BufferTemperature, MaxTemperature - BufferTemperature)
             });
         }
 
