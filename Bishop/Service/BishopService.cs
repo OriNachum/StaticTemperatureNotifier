@@ -35,9 +35,7 @@ namespace Bishop.Service
 
         private async Task NextCycleActionAsync()
         {
-            bool success = false;
-            string request = "https://localhost:8001/ThermalAlert";
-            _logger.LogDebug($"{nameof(BishopService)} - {nameof(NextCycleActionAsync)} - httpClient Request {request}");
+            _logger.LogDebug($"{nameof(BishopService)} - {nameof(NextCycleActionAsync)} - Starting to alert");
             try
             {
                 bool response = await _thermalNotifierService.AlertTemperatureAsync();
@@ -45,18 +43,13 @@ namespace Bishop.Service
 
                 if (!response)
                 {
-                    _logger.LogError($"{nameof(BishopService)} - {nameof(NextCycleActionAsync)} - Error in request for next action. request: { request } response: {response}");
+                    _logger.LogError($"{nameof(BishopService)} - {nameof(NextCycleActionAsync)} - Error in request for next action. response: {response}");
                     return;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"{nameof(BishopService)} - {nameof(NextCycleActionAsync)} - Error with httpClinet");
-            }
-
-            if (!success)
-            {
-                _logger.LogInformation($"{nameof(BishopService)} - {nameof(NextCycleActionAsync)} - no action to perform");
+                _logger.LogError(ex, $"{nameof(BishopService)} - {nameof(NextCycleActionAsync)} - Error with {nameof(_thermalNotifierService)}");
             }
         }
 
