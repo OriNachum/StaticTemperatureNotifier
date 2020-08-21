@@ -18,7 +18,7 @@ namespace ThermalNotifierWS.Service
         private readonly IThermometerService _thermometerService;
         private readonly ISlackNotifierService _slackNotifierService;
         private const double MinTemperature = 25;
-        private const double MaxTemperature = 28;
+        private const double MaxTemperature = 27;
         private const double BufferTemperature = 0.1;
 
         public ThermalNotifierService(IThermometerService thermometerService, ISlackNotifierService slackNotifierService, ILogger logger)
