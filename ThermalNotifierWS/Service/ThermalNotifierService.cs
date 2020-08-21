@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using SlackNotifierWS.Service;
 using System;
 using System.Collections.Generic;
@@ -17,14 +18,34 @@ namespace ThermalNotifierWS.Service
         private readonly ILogger _logger;
         private readonly IThermometerService _thermometerService;
         private readonly ISlackNotifierService _slackNotifierService;
-        private const double MinTemperature = 25;
-        private const double MaxTemperature = 27;
-        private const double BufferTemperature = 0.1;
+        private readonly string SlackEndpoint = "https://hooks.slack.com/services/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";
+        private readonly double MinTemperature = 25;
+        private readonly double MaxTemperature = 27;
+        private readonly double BufferTemperature = 0.1;
 
-        public ThermalNotifierService(IThermometerService thermometerService, ISlackNotifierService slackNotifierService, ILogger logger)
+        public ThermalNotifierService(IThermometerService thermometerService, ISlackNotifierService slackNotifierService, IConfiguration configuration, ILogger logger)
         {
             _thermometerService = thermometerService;
             _slackNotifierService = slackNotifierService;
+            if (double.TryParse(configuration["MinTemperature"], out double minTemperature))
+            {
+                MinTemperature = minTemperature;
+            }
+
+            if (double.TryParse(configuration["MaxTemperature"], out double maxTemperature))
+            {
+                MaxTemperature = maxTemperature;
+            }
+
+            if (double.TryParse(configuration["MaxTemperature"], out double bufferTemperature))
+            {
+                BufferTemperature = bufferTemperature;
+            }
+
+            if (!string.IsNullOrWhiteSpace(configuration["SlackEndpoint"]))
+            {
+                SlackEndpoint = configuration["SlackEndpoint"];
+            }
 
             _logger = logger;
         }
@@ -62,7 +83,6 @@ namespace ThermalNotifierWS.Service
                 _logger.LogDebug($"requestTemperature succeeded, but temperature is OK: {temperature}℃");
                 return true;
             }
-            string SlackEndpoint = "https://hooks.slack.com/services/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";
             var notificationRequestUrlBuilder = new UriBuilder(SlackEndpoint);
 
             string encodedMessage = UrlEncoder.Default.Encode(notifyTemperatureProvider.GenerateMessage(temperature.Value));
