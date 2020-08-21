@@ -7,7 +7,7 @@ namespace ThermalNotifierWS.Service.NotifyTemperatureConditionProviders
 {
     public class NotifyOnRevertingToAllowedRange : INotifyTemperatureProvider
     {
-        private readonly int MaximumTimeGapBetweenNotifications = 2;
+        private readonly int MaximumTimeGapBetweenNotifications = 120;
         private readonly double _minTemperature;
         private readonly double _maxTemperature;
 
@@ -38,7 +38,7 @@ namespace ThermalNotifierWS.Service.NotifyTemperatureConditionProviders
         private bool ShouldRemind()
         {
             DateTime? lastReminderTime = NotifyReminderHistory.LastReminderTime;
-            return !lastReminderTime.HasValue || (DateTime.UtcNow - lastReminderTime.Value) > TimeSpan.FromHours(MaximumTimeGapBetweenNotifications);
+            return !lastReminderTime.HasValue || (DateTime.UtcNow - lastReminderTime.Value) > TimeSpan.FromMinutes(MaximumTimeGapBetweenNotifications);
         }
 
         public string GenerateMessage(double temperature) => $"Temperature back to allowed range: {temperature}℃";
