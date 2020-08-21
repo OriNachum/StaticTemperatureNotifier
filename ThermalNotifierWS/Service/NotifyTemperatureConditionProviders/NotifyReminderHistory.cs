@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace ThermalNotifierWS.Service
 {
-    public static class NotifyOnBreachingAllowedRangeReminderHistory
+    public static class NotifyReminderHistory
     {
         public static DateTime? LastReminderTime { get; set; }
     }
