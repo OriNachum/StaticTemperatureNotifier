@@ -7,14 +7,15 @@ namespace ThermalNotifierWS.Service.NotifyTemperatureConditionProviders
 {
     public class NotifyOnRevertingToAllowedRange : INotifyTemperatureProvider
     {
-        private const int MaximumTimeGapBetweenNotifications = 2;
+        private readonly int MaximumTimeGapBetweenNotifications = 2;
         private readonly double _minTemperature;
         private readonly double _maxTemperature;
 
-        public NotifyOnRevertingToAllowedRange(double minTemperature, double maxTemperature)
+        public NotifyOnRevertingToAllowedRange(double minTemperature, double maxTemperature, int forceReminderTime)
         {
             _minTemperature = minTemperature;
             _maxTemperature = maxTemperature;
+            MaximumTimeGapBetweenNotifications = forceReminderTime;
         }
 
         public bool ShouldNotify(double temperature, double? previousTemperature)

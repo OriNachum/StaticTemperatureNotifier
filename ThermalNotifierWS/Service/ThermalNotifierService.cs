@@ -22,6 +22,8 @@ namespace ThermalNotifierWS.Service
         private readonly double MinTemperature = 25;
         private readonly double MaxTemperature = 27;
         private readonly double BufferTemperature = 0.1;
+        private readonly int ForceReminderTimeWhenOutOfRange = 1;
+        private readonly int ForceReminderTimeWhenInRange = 2;
 
         public ThermalNotifierService(IThermometerService thermometerService, ISlackNotifierService slackNotifierService, IConfiguration configuration, ILogger logger)
         {
@@ -47,6 +49,16 @@ namespace ThermalNotifierWS.Service
                 SlackEndpoint = configuration["SlackEndpoint"];
             }
 
+            if (int.TryParse(configuration["ForceReminderTimeWhenOutOfRange"], out int forceReminderTimeWhenOutOfRange))
+            {
+                ForceReminderTimeWhenOutOfRange = forceReminderTimeWhenOutOfRange;
+            }
+
+            if (int.TryParse(configuration["ForceReminderTimeWhenInRange"], out int forceReminderTimeWhenInRange))
+            {
+                ForceReminderTimeWhenInRange = forceReminderTimeWhenInRange;
+            }
+
             _logger = logger;
         }
 
@@ -54,8 +66,8 @@ namespace ThermalNotifierWS.Service
         {
             return await NotifyTemperatureIfNeeded(new INotifyTemperatureProvider[]
             {
-                new NotifyOnBreachingAllowedRange(MinTemperature - BufferTemperature, MaxTemperature + BufferTemperature),
-                new NotifyOnRevertingToAllowedRange(MinTemperature + BufferTemperature, MaxTemperature - BufferTemperature)
+                new NotifyOnBreachingAllowedRange(MinTemperature - BufferTemperature, MaxTemperature + BufferTemperature, ForceReminderTimeWhenOutOfRange),
+                new NotifyOnRevertingToAllowedRange(MinTemperature + BufferTemperature, MaxTemperature - BufferTemperature, ForceReminderTimeWhenInRange)
             });
         }
 
