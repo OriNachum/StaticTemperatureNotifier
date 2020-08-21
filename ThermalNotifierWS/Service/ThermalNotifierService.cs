@@ -37,7 +37,7 @@ namespace ThermalNotifierWS.Service
                 MaxTemperature = maxTemperature;
             }
 
-            if (double.TryParse(configuration["MaxTemperature"], out double bufferTemperature))
+            if (double.TryParse(configuration["BufferTemperature"], out double bufferTemperature))
             {
                 BufferTemperature = bufferTemperature;
             }
